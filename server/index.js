@@ -111,6 +111,10 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('start_next_round', ({ lobbyCode }) => {
+    startRound(lobbyCode, io);
+  });  
+
   // CEO chooses candidate
   socket.on("ceo_choose", ({ lobbyCode, chosenCvId }) => {
     const result = finalizeRound(lobbyCode, chosenCvId, io);
@@ -128,10 +132,16 @@ io.on('connection', (socket) => {
         scores: result.scores
       });
     } else {
-      setTimeout(() => {
-        startRound(lobbyCode, io);
-      }, 3000);
-    }
+      // Instead of immediately starting, show the hired CV first
+      const hiredCv = result.hiredCv; // <- need to add this in finalizeRound()
+      const job = result.job;
+    
+      io.to(lobbyCode).emit("hired_result", {
+        hiredCv,
+        job,
+        ceoId: games[lobbyCode].players[games[lobbyCode].ceoIndex].id // Send current CEO id
+      });
+    }    
   });
   
 

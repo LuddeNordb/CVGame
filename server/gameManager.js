@@ -156,6 +156,7 @@ function submitCV(lobbyCode, playerId, cvId, io) {
     if (!chosenSubmission) return;
   
     const chosenPlayer = game.players.find(p => p.name === chosenSubmission.playerName);
+  
     if (chosenPlayer) {
       chosenPlayer.points += 1;
     }
@@ -165,6 +166,7 @@ function submitCV(lobbyCode, playerId, cvId, io) {
       return { ...cv, submittedBy: sub.playerName };
     });
   
+    
     io.to(lobbyCode).emit("round_result", {
       hiredCvId: chosenCvId,
       job: game.currentJob,
@@ -182,8 +184,21 @@ function submitCV(lobbyCode, playerId, cvId, io) {
   
     advanceCEO(game);
     game.state = 'waiting';
-    return { gameOver: false };
+
+    // 🛠 Add hiredCv to game state
+    const chosenCv = CVS.find(c => c.id === chosenCvId);
+    game.hiredCv = chosenCv;
+    game.hiredJob = game.currentJob;
+
+    // ✅ Return hired info for "hired_result" screen
+    return {
+    gameOver: false,
+    hiredCv: chosenCv,
+    job: game.currentJob
+    };
+
   }
+  
   
 
 function advanceCEO(game) {
@@ -207,7 +222,7 @@ function getGameState(lobbyCode, playerName) {
       });
     
   
-    return {
+    const response = {
       isCEO,
       ceoId: ceo?.id || null, // ✅ add this!
       job: game.currentJob,
@@ -218,6 +233,13 @@ function getGameState(lobbyCode, playerName) {
       gameStarted: true,
       submissions: fullSubmissions, // ✅ added
     };
+
+    if (game.state === 'hired_result') {
+        response.hiredCv = game.hiredCv || null;
+        response.hiredJob = game.currentJob || null;
+      }
+
+    return response;
   }
   
 
