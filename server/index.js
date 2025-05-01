@@ -18,6 +18,7 @@ const {
   submitVote,
   finalizeRound,
   getGameState,
+  resetGame,
   games
 } = require('./gameManager');
 
@@ -75,11 +76,11 @@ io.on('connection', (socket) => {
   });
 
   // Start game
-  socket.on("start_game", (code) => {
+  socket.on("start_game", (code, username) => {
     const lobby = getLobby(code);
     if (!lobby) return;
 
-    if (socket.id !== lobby.createdBy) {
+    if (username !== lobby.createdBy) {
       socket.emit("start_denied", { reason: "Only the lobby creator can start the game." });
       return;
     }
@@ -102,6 +103,7 @@ io.on('connection', (socket) => {
 
   // Player votes to discard
   socket.on("vote_discard", ({ lobbyCode, votedCvId }) => {
+    io.to(lobbyCode).emit("discard_vote_success", {socketId: socket.id});
     const result = submitVote(lobbyCode, socket.id, votedCvId);
     if (result) {
       io.to(lobbyCode).emit("voting_result", result);
@@ -114,6 +116,18 @@ io.on('connection', (socket) => {
   socket.on('start_next_round', ({ lobbyCode }) => {
     startRound(lobbyCode, io);
   });  
+
+  socket.on('return_to_lobby', ({ lobbyCode }) => { //fix so that only lobby owner can return
+    const lobby = getLobby(lobbyCode);
+    console.log("Returning to lobby:", lobbyCode, lobby);
+    if (lobby) {
+      //resetGame(lobbyCode);
+      lobby.gameStarted = false; // ✅ Reset the lobby
+      io.to(lobbyCode).emit('lobby_update', lobby); // ✅ Send fresh lobby to everyone
+      io.to(lobbyCode).emit('lobby_reset');
+    }
+  });
+  
 
   // CEO chooses candidate
   socket.on("ceo_choose", ({ lobbyCode, chosenCvId }) => {
@@ -135,7 +149,7 @@ io.on('connection', (socket) => {
       // Instead of immediately starting, show the hired CV first
       const hiredCv = result.hiredCv; // <- need to add this in finalizeRound()
       const job = result.job;
-    
+      
       io.to(lobbyCode).emit("hired_result", {
         hiredCv,
         job,

@@ -22,6 +22,7 @@ function App() {
     handleStartGame,
     handleSubmitCV,
     handleNextRound,
+    handleReturnToLobby,
   } = useSocketHandlers({
     username,
     setUsername,
@@ -35,7 +36,7 @@ function App() {
 
   if (loading) return <LoadingScreen />;
 
-  if (gameState.winner) return <WinScreen winner={gameState.winner} scores={gameState.finalScores} />;
+  if (gameState.winner) return <WinScreen winner={gameState.winner} scores={gameState.finalScores} username={username} currentLobby={currentLobby} handleReturnToLobby={handleReturnToLobby} />;
 
   if (!gameState.gameStarted) {
     return (

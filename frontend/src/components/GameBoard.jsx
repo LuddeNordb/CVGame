@@ -81,6 +81,8 @@ function GameBoard({ gameState, currentLobby, username, onSubmitCV, onNextRound,
             username={username}
             hasVoted={hasVoted}
             onVoteDiscard={handleVoteDiscard}
+            ceoName={ceoName}
+            currentJob={currentJob}
         />
         ) : phase === 'choosing' && isCEO ? (
         <ChoosingPhase

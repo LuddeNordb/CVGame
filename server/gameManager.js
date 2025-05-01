@@ -1,23 +1,10 @@
 const { nanoid } = require('nanoid');
 
-const JOBS = [
-  { id: 'job1', title: 'Creative Director', traits: { creativity: 'Great', leadership: 'Ok' } },
-  { id: 'job2', title: 'CTO', traits: { tech: 'Great', leadership: 'Great' } },
-  { id: 'job3', title: 'Marketing Lead', traits: { creativity: 'Ok', leadership: 'Great' } }
-];
+const { JOBS } = require('./data/jobs.js');
+const { CVS } = require('./data/cvs.js');
 
-const CVS = [
-  { id: 'cv1', name: 'Ada Lovelace', traits: { tech: 'Great', creativity: 'Ok' } },
-  { id: 'cv2', name: 'Alan Turing', traits: { tech: 'Great', leadership: 'Bad' } },
-  { id: 'cv3', name: 'Grace Hopper', traits: { leadership: 'Great', creativity: 'Ok' } },
-  { id: 'cv4', name: 'Steve Jobs', traits: { creativity: 'Great', leadership: 'Great' } },
-  { id: 'cv5', name: 'Elon Musk', traits: { leadership: 'Great', creativity: 'Ok' } },
-  { id: 'cv6', name: 'Marie Curie', traits: { tech: 'Great', creativity: 'Great' } }
-];
-
-function drawRandomCVs(n) {
-  const shuffled = [...CVS].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, n);
+function pickCVs(deck,f,t) {
+  return deck.slice(f, t);
 }
 
 function getRandomJob() {
@@ -32,7 +19,7 @@ function initGame(lobbyCode, players) {
     players: players.map(p => ({ ...p, points: 0 })),
     ceoIndex: 0,
     round: 0,
-    state: 'waiting'
+    state: 'waiting',
   };
   games[lobbyCode] = game;
   return game;
@@ -51,11 +38,13 @@ function startRound(lobbyCode, io) {
   game.votes = [];
   game.discardedCvId = null;
   game.cvHands = {};
-
+  f=0; t=3;
+  const shuffled = [...CVS].sort(() => 0.5 - Math.random());
   game.players.forEach(p => {
     if (p.id !== ceo.id) {
-      game.cvHands[p.name] = drawRandomCVs(3); // ✅ use name
+      game.cvHands[p.name] = pickCVs(shuffled,f,t); // ✅ use name
     }
+    f+=3; t+=3;
   });
 
   io.to(lobbyCode).emit("round_started", {
@@ -78,8 +67,6 @@ function submitCV(lobbyCode, playerId, cvId, io) {
     }
   
     const nonCEOs = game.players.filter(p => p.name !== game.players[game.ceoIndex].name);
-    console.log("NonCeo len:", nonCEOs.length);
-    console.log("Submissions len:", game.submissions.length);
     if (game.submissions.length === nonCEOs.length) {
       if (nonCEOs.length >= 3) {
         game.state = 'voting';
@@ -104,21 +91,22 @@ function submitCV(lobbyCode, playerId, cvId, io) {
   
 
   function submitVote(lobbyCode, voterId, votedCvId) {
-    console.log("voterId:", voterId);
+    console.log("Voter ID:", voterId, "Voted CV ID:", votedCvId, "Lobby Code:", lobbyCode);
     const game = games[lobbyCode];
     if (!game || game.state !== 'voting') return;
-  
+    console.log('step1')
     const voter = game.players.find(p => p.id === voterId);
     if (!voter) return;
-  
+    console.log('step2')
     const ownSubmission = game.submissions.find(s => s.playerName === voter.name);
     if (ownSubmission?.cvId === votedCvId) return; // Can't vote against your own CV
-  
+    console.log('step3')
     const alreadyVoted = game.votes.find(v => v.voterName === voter.name);
     if (!alreadyVoted) {
       game.votes.push({ voterName: voter.name, votedCvId });
     }
-  
+    console.log('step4')
+    console.log("Votes:", game.votes);
     const nonCEOPlayers = game.players.filter(p => p.name !== game.players[game.ceoIndex].name);
     if (game.votes.length === nonCEOPlayers.length) {
       // Tally votes
@@ -126,7 +114,7 @@ function submitCV(lobbyCode, playerId, cvId, io) {
       for (const vote of game.votes) {
         tally[vote.votedCvId] = (tally[vote.votedCvId] || 0) + 1;
       }
-  
+      console.log("Tally:", tally);
       // Find the most voted CV
       const discardedCvId = Object.entries(tally).sort((a, b) => b[1] - a[1])[0][0];
       game.discardedCvId = discardedCvId;
@@ -174,7 +162,7 @@ function submitCV(lobbyCode, playerId, cvId, io) {
       scores: game.players.map(p => ({ id: p.id, name: p.name, points: p.points }))
     });
   
-    if (chosenPlayer.points >= 20) {
+    if (chosenPlayer.points >= 5) {
       return {
         gameOver: true,
         winner: chosenPlayer,
@@ -183,7 +171,7 @@ function submitCV(lobbyCode, playerId, cvId, io) {
     }
   
     advanceCEO(game);
-    game.state = 'waiting';
+    game.state = 'hired_result';
 
     // 🛠 Add hiredCv to game state
     const chosenCv = CVS.find(c => c.id === chosenCvId);
@@ -203,6 +191,19 @@ function submitCV(lobbyCode, playerId, cvId, io) {
 
 function advanceCEO(game) {
   game.ceoIndex = (game.ceoIndex + 1) % game.players.length;
+}
+
+function resetGame(lobbyCode) {
+    const game = games[lobbyCode];
+    if (!game) return;
+    
+    game.winner = null;
+    game.round = 0;
+    game.state = 'waiting';
+    game.submissions = [];
+    game.votes = [];
+    game.discardedCvId = null;
+    game.cvHands = {};
 }
 
 function getGameState(lobbyCode, playerName) {
@@ -250,5 +251,6 @@ module.exports = {
   submitCV,
   submitVote,
   finalizeRound,
-  getGameState
+  getGameState,
+  resetGame,
 };

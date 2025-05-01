@@ -10,7 +10,7 @@ function createLobby(player) {
     createdAt: Date.now(),
     gameStarted: false,
     connectedSockets: new Set([player.id]),
-    createdBy: player.id // mark the creator
+    createdBy: player.name // mark the creator
   };
   lobbies[code] = lobby;
   return lobby;

@@ -1,8 +1,13 @@
 import React from 'react';
 
-function VotingPhase({ submissions, username, hasVoted, onVoteDiscard }) {
+function VotingPhase({ submissions, username, hasVoted, onVoteDiscard, ceoName, currentJob }) {
   return (
     <div className="p-6">
+      <p className="text-sm mb-4 text-gray-700">👑 CEO this round: <strong>{ceoName}</strong></p>
+      <h2 className="text-xl font-bold mb-2">Job description:</h2>
+      <p className="text-sm mb-4 text-gray-700">{currentJob?.traits.Description}</p>
+      <p className="text-sm mb-4 text-gray-700">{currentJob?.traits.bullet}</p>
+
       <h2 className="text-xl font-bold mb-4">🗳 Vote to discard one candidate</h2>
       <p className="mb-6 text-sm text-gray-600">You cannot vote for your own submission.</p>
 
@@ -14,7 +19,7 @@ function VotingPhase({ submissions, username, hasVoted, onVoteDiscard }) {
               <p className="font-bold text-lg mb-2">?</p>
               <ul className="text-sm text-gray-700 mb-2">
                 {Object.entries(cv.traits).map(([trait, value]) => (
-                  <li key={trait}><span className="capitalize">{trait}</span>: {value}</li>
+                  <li key={trait}><span className="font-bold">{trait}</span>: {value}</li>
                 ))}
               </ul>
               <button

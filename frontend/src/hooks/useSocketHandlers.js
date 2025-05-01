@@ -51,6 +51,17 @@ export function useSocketHandlers({ username, setUsername, lobbyCode, setLobbyCo
     });
 
     socket.on('lobby_update', setCurrentLobby);
+    socket.on('lobby_reset', () => {
+        setGameState({
+            gameStarted: false,
+            phase: null,
+            isCEO: false,
+            ceoId: null,
+            cvHand: [],
+            submissions: [],
+            winner: null,
+            finalScores: [],
+        })});
     socket.on('game_started', () => setGameState(prev => ({ ...prev, gameStarted: true })));
     socket.on('round_started', ({ job, ceoId, cvHands }) => {
       setGameState(prev => ({
@@ -61,6 +72,7 @@ export function useSocketHandlers({ username, setUsername, lobbyCode, setLobbyCo
         cvHand: cvHands[username] || [],
         phase: 'submitting',
         cvSubmitted: false,
+        hasVoted: false,
       }));
     });
     socket.on('start_voting', ({ submissions }) => {
@@ -76,6 +88,12 @@ export function useSocketHandlers({ username, setUsername, lobbyCode, setLobbyCo
         hiredJob: job,
         phase: 'hired_result',
         ceoId,
+      }));
+    });
+    socket.on('discard_vote_success', ({ socketId }) => {
+      setGameState(prev => ({
+        ...prev,
+        hasVoted: prev.hasVoted || socketId === socket.id,
       }));
     });
     socket.on('game_over', ({ winner, scores }) => {
@@ -121,7 +139,7 @@ export function useSocketHandlers({ username, setUsername, lobbyCode, setLobbyCo
 
   const handleStartGame = () => {
     if (lobbyCode) {
-      socket.emit('start_game', lobbyCode);
+      socket.emit('start_game', lobbyCode, username);
     }
   };
 
@@ -137,6 +155,10 @@ export function useSocketHandlers({ username, setUsername, lobbyCode, setLobbyCo
     socket.emit('start_next_round', { lobbyCode });
   };
 
+  const handleReturnToLobby = () => {
+    socket.emit('return_to_lobby', { lobbyCode: lobbyCode });
+  };  
+
   return {
     gameState,
     handleCreateLobby,
@@ -144,5 +166,6 @@ export function useSocketHandlers({ username, setUsername, lobbyCode, setLobbyCo
     handleStartGame,
     handleSubmitCV,
     handleNextRound,
+    handleReturnToLobby,
   };
 }

@@ -1,0 +1,6 @@
+export const JOBS = [
+    { id: 'job1', title: 'Arborist ', traits: {Description: 'Vi söker en lösningsorienterad person som trivs ute året om och har ett öga för detaljer. Du gillar att jobba med kroppen, har god balans och tvekar inte inför att använda verktyg med skicklighet och respekt.', bullet:'varierande arbetsmiljö, starka kollegor'} },
+    { id: 'job2', title: 'Alborist ', traits: {Description: 'Vi söker en lösningsorienterad person som trivs ute året om och har ett öga för detaljer. Du gillar att jobba med kroppen, har god balans och tvekar inte inför att använda verktyg med skicklighet och respekt.', bullet:'varierande arbetsmiljö, starka kollegor'} },
+    { id: 'job3', title: 'Agborist ', traits: {Description: 'Vi söker en lösningsorienterad person som trivs ute året om och har ett öga för detaljer. Du gillar att jobba med kroppen, har god balans och tvekar inte inför att använda verktyg med skicklighet och respekt.', bullet:'varierande arbetsmiljö, starka kollegor'} },
+    { id: 'job4', title: 'Arborit ', traits: {Description: 'Vi söker en lösningsorienterad person som trivs ute året om och har ett öga för detaljer. Du gillar att jobba med kroppen, har god balans och tvekar inte inför att använda verktyg med skicklighet och respekt.', bullet:'varierande arbetsmiljö, starka kollegor'} }
+];

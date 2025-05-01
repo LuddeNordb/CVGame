@@ -1,7 +1,7 @@
 import React from 'react';
 
 function Lobby({ username, setUsername, lobbyCode, setLobbyCode, currentLobby, error, onCreateLobby, onJoinLobby, onStartGame, socketId }) {
-    const canStartGame = currentLobby?.players?.length >= 3 && currentLobby?.createdBy === socketId;
+    const canStartGame = currentLobby?.players?.length >= 3 && currentLobby?.createdBy === username;
 
     return (
     <div className="p-6 max-w-md mx-auto text-center">

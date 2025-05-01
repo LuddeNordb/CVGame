@@ -3,8 +3,10 @@ import React from 'react';
 function SubmittingPhase({ currentJob, ceoName, cvHand, onSubmitCV, cvSubmitted }) {
   return (
     <div className="pt-24 px-6">
-      <h2 className="text-xl font-bold mb-2">🧑‍💼 Job: {currentJob?.title}</h2>
       <p className="text-sm mb-4 text-gray-700">👑 CEO this round: <strong>{ceoName}</strong></p>
+      <h2 className="text-xl font-bold mb-2">Job description:</h2>
+      <p className="text-sm mb-4 text-gray-700">{currentJob?.traits.Description}</p>
+      <p className="text-sm mb-4 text-gray-700">{currentJob?.traits.bullet}</p>
 
       <h3 className="mb-2">Choose a CV to submit:</h3>
       {cvHand.length > 0 ? (
@@ -14,7 +16,7 @@ function SubmittingPhase({ currentJob, ceoName, cvHand, onSubmitCV, cvSubmitted 
               <p className="font-bold text-lg mb-2">?</p>
               <ul className="text-sm text-gray-700">
                 {Object.entries(cv.traits).map(([trait, value]) => (
-                  <li key={trait}>{trait}: {value}</li>
+                  <li key={trait}><span className="font-bold">{trait}</span>: {value}</li>
                 ))}
               </ul>
               <button
